@@ -61,22 +61,24 @@ export function withMiddleware(handler: Handler) {
     try {
       await handler(req, res);
     } catch (error) {
+      // ChatGPT Actions は非200レスポンスを「通信エラー」として扱うため、
+      // エラー時も200で返し、bodyにエラー情報を含める
       if (error instanceof ValidationError || error instanceof UnsupportedError) {
-        return res.status(400).json({
+        return res.status(200).json({
           error: { code: 'VALIDATION_ERROR', message: error.message },
         });
       }
       if (error instanceof NotFoundError) {
-        return res.status(404).json({
+        return res.status(200).json({
           error: { code: 'NOT_FOUND', message: error.message },
         });
       }
       if (error instanceof ExternalApiError) {
-        return res.status(502).json({
+        return res.status(200).json({
           error: { code: 'EXTERNAL_API_ERROR', message: error.message },
         });
       }
-      return res.status(500).json({
+      return res.status(200).json({
         error: { code: 'INTERNAL_ERROR', message: 'Internal server error' },
       });
     }
